@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "test:watch": "node --test --watch tests/unit/*.test.js",
+    "test:integration": "node samples/fs-minio-test.js",
+    "test:all": "npm run test && npm run test:integration"
+  }
+}
