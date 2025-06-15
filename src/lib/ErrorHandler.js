@@ -91,7 +91,7 @@ class ErrorHandler {
    * @param {string} operation - Operation name
    * @returns {Error} fs-compatible error
    */
-  static createError(code, path = null, operation = 'open') {
+  static createFileSystemError(code, path = null, operation = 'open') {
     // ENOENT, EACCES, EEXIST, EINVAL, ENAMETOOLONG など標準エラーコードにも対応
     let errorInfo = this.errorMapping[code];
     if (!errorInfo) {

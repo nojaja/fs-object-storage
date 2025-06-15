@@ -24,10 +24,10 @@ npm install fs-object-storage
 ### 基本的な使用方法
 
 ```javascript
-import { FsMinioClient } from 'fs-object-storage';
+import { ObjectStorage } from 'fs-object-storage';
 
 // MinIO/S3クライアントの設定
-const client = new FsMinioClient({
+const fs = new ObjectStorage({
   endPoint: 'localhost',
   port: 9000,
   useSSL: false,
@@ -38,18 +38,18 @@ const client = new FsMinioClient({
 // ファイル操作（fs互換）
 try {
   // ファイル書き込み
-  await client.writeFile('/mybucket/path/to/file.txt', 'Hello, World!');
+  await fs.writeFile('/mybucket/path/to/file.txt', 'Hello, World!');
   
   // ファイル読み込み
-  const data = await client.readFile('/mybucket/path/to/file.txt', 'utf8');
+  const data = await fs.readFile('/mybucket/path/to/file.txt', 'utf8');
   console.log(data); // "Hello, World!"
   
   // ファイル存在確認
-  const exists = await client.exists('/mybucket/path/to/file.txt');
+  const exists = await fs.exists('/mybucket/path/to/file.txt');
   console.log(exists); // true
   
   // ディレクトリ一覧
-  const files = await client.readdir('/mybucket/path');
+  const files = await fs.readdir('/mybucket/path');
   console.log(files); // ['to/']
   
 } catch (error) {
@@ -64,11 +64,11 @@ import fs from 'fs';
 
 // 大容量ファイルのアップロード
 const readStream = fs.createReadStream('./large-file.zip');
-const writeStream = await client.createWriteStream('/mybucket/uploads/large-file.zip');
+const writeStream = await fs.createWriteStream('/mybucket/uploads/large-file.zip');
 readStream.pipe(writeStream);
 
 // ダウンロードストリーム
-const downloadStream = await client.createReadStream('/mybucket/uploads/large-file.zip');
+const downloadStream = await fs.createReadStream('/mybucket/uploads/large-file.zip');
 const localWriteStream = fs.createWriteStream('./downloaded-file.zip');
 downloadStream.pipe(localWriteStream);
 ```
@@ -111,7 +111,7 @@ npm run test:all
 ### コンストラクタ
 
 ```javascript
-new FsMinioClient(options)
+new ObjectStorage(options)
 ```
 
 **options**:
@@ -127,28 +127,28 @@ new FsMinioClient(options)
 ファイルを読み込みます。
 
 ```javascript
-const data = await client.readFile('/bucket/file.txt', 'utf8');
+const data = await fs.readFile('/bucket/file.txt', 'utf8');
 ```
 
 #### `writeFile(path, data, options?)`
 ファイルを書き込みます。
 
 ```javascript
-await client.writeFile('/bucket/file.txt', 'データ');
+await fs.writeFile('/bucket/file.txt', 'データ');
 ```
 
 #### `exists(path)`
 ファイル/ディレクトリの存在を確認します。
 
 ```javascript
-const exists = await client.exists('/bucket/file.txt');
+const exists = await fs.exists('/bucket/file.txt');
 ```
 
 #### `stat(path)`
 ファイル/ディレクトリの統計情報を取得します。
 
 ```javascript
-const stats = await client.stat('/bucket/file.txt');
+const stats = await fs.stat('/bucket/file.txt');
 console.log(stats.size, stats.isFile(), stats.isDirectory());
 ```
 
@@ -156,14 +156,14 @@ console.log(stats.size, stats.isFile(), stats.isDirectory());
 ファイルを削除します。
 
 ```javascript
-await client.unlink('/bucket/file.txt');
+await fs.unlink('/bucket/file.txt');
 ```
 
 #### `copyFile(src, dest)`
 ファイルをコピーします。
 
 ```javascript
-await client.copyFile('/bucket/src.txt', '/bucket/dest.txt');
+await fs.copyFile('/bucket/src.txt', '/bucket/dest.txt');
 ```
 
 ### ディレクトリ操作メソッド
@@ -172,21 +172,21 @@ await client.copyFile('/bucket/src.txt', '/bucket/dest.txt');
 ディレクトリの内容を一覧します。
 
 ```javascript
-const files = await client.readdir('/bucket/directory');
+const files = await fs.readdir('/bucket/directory');
 ```
 
 #### `mkdir(path, options?)`
 ディレクトリを作成します。
 
 ```javascript
-await client.mkdir('/bucket/new-directory', { recursive: true });
+await fs.mkdir('/bucket/new-directory', { recursive: true });
 ```
 
 #### `rmdir(path)`
 空のディレクトリを削除します。
 
 ```javascript
-await client.rmdir('/bucket/empty-directory');
+await fs.rmdir('/bucket/empty-directory');
 ```
 
 ### ストリーム操作メソッド
@@ -195,14 +195,14 @@ await client.rmdir('/bucket/empty-directory');
 読み込みストリームを作成します。
 
 ```javascript
-const stream = await client.createReadStream('/bucket/file.txt');
+const stream = await fs.createReadStream('/bucket/file.txt');
 ```
 
 #### `createWriteStream(path)`
 書き込みストリームを作成します。
 
 ```javascript
-const stream = await client.createWriteStream('/bucket/file.txt');
+const stream = await fs.createWriteStream('/bucket/file.txt');
 ```
 
 ## 🗺️ パス形式
@@ -223,7 +223,7 @@ MinIOのエラーは自動的にfs互換のエラーコードに変換されま�
 
 ```javascript
 try {
-  await client.readFile('/bucket/nonexistent.txt');
+  await fs.readFile('/bucket/nonexistent.txt');
 } catch (error) {
   console.log(error.code); // 'ENOENT'
   console.log(error.errno); // -2
@@ -252,7 +252,7 @@ try {
 
 本ライブラリは以下のコンポーネントで構成されています：
 
-- **FsMinioClient**: メインのfs互換クライアント
+- **ObjectStorage**: メインのfs互換クライアント
 - **ErrorHandler**: MinIO→fs エラー変換
 - **PathConverter**: ファイルパス⇔バケット/キー変換
 - **StreamConverter**: ストリーム/データ形式変換
@@ -284,4 +284,4 @@ MIT
 
 - **ドキュメント**: [`docs/`](./docs/) フォルダ
 - **GitHub Issues**: バグ報告・機能要求
-- **サンプルコード**: [`samples/`](./samples/) フォルダ"
+- **サンプルコード**: [`samples/`](./samples/) フォルダ

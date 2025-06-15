@@ -1,6 +1,6 @@
 import { Readable, Writable } from 'stream';
 
-export interface MinioConfig {
+export interface Config {
   endPoint: string;
   port?: number;
   useSSL?: boolean;
@@ -41,8 +41,8 @@ export interface FileSystemError extends Error {
   syscall?: string;
 }
 
-export default class FsMinioClient {
-  constructor(config: MinioConfig);
+export default class ObjectStorage {
+  constructor(config: Config);
 
   // File operations
   readFile(path: string): Promise<Buffer>;
@@ -95,4 +95,4 @@ export class StreamConverter {
   static normalizeData(data: any): Buffer;
 }
 
-export default FsMinioClient;
+export default ObjectStorage;

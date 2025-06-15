@@ -26,7 +26,7 @@ test('ErrorHandler - convert AccessDenied to EACCES', () => {
 });
 
 test('ErrorHandler - create filesystem error', () => {
-  const error = ErrorHandler.createError('ENOENT', '/test/file.txt', 'open');
+  const error = ErrorHandler.createFileSystemError('ENOENT', '/test/file.txt', 'open');
   assert.strictEqual(error.code, 'ENOENT');
   assert.strictEqual(error.errno, -2);
   assert.strictEqual(error.path, '/test/file.txt');
@@ -39,16 +39,16 @@ const pc = new PathConverter({ bucket: 'bucket' });
 test('PathConverter - split path correctly', () => {
   const result = pc.pathToMinIO('/bucket/path/to/file.txt');
   assert.strictEqual(result.bucket, 'bucket');
-  assert.strictEqual(result.key, 'bucket/path/to/file.txt');
+  assert.strictEqual(result.key, 'path/to/file.txt');
 });
 
 test('PathConverter - join path correctly', () => {
-  const result = pc.joinPath('/bucket', 'path/to/file.txt');
+  const result = pc.minIOToPath('bucket', 'path/to/file.txt');
   assert.strictEqual(result, '/bucket/path/to/file.txt');
 });
 
 test('PathConverter - normalize path', () => {
-  const result = pc.joinPath('/bucket//path///to', 'file.txt');
+  const result = pc.normalizePath('/bucket//path///to/file.txt');
   assert.strictEqual(result, '/bucket/path/to/file.txt');
 });
 
@@ -58,7 +58,7 @@ test('PathConverter - get parent path', () => {
 });
 
 test('PathConverter - get basename', () => {
-  const result = pc.getFileName('/bucket/path/to/file.txt');
+  const result = pc.getBasename('/bucket/path/to/file.txt');
   assert.strictEqual(result, 'file.txt');
 });
 

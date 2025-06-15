@@ -1,17 +1,17 @@
-// fs-minio - fs-compatible API for MinIO/S3 object storage
+// fs-object-storage - fs-compatible API for MinIO/S3 object storage
 // Main entry point
 
-import FsMinioClient from './lib/FsMinioClient.js';
+import ObjectStorage from './lib/ObjectStorage.js';
 import PathConverter from './lib/PathConverter.js';
 import StreamConverter from './lib/StreamConverter.js';
 import ErrorHandler from './lib/ErrorHandler.js';
 
 export {
-  FsMinioClient,
+  ObjectStorage,
   PathConverter,
   StreamConverter,
   ErrorHandler
 };
 
 // Default export for convenience
-export default FsMinioClient;
+export default ObjectStorage;

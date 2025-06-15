@@ -1,13 +1,13 @@
-// FsMinioClient.js - Main fs-compatible client for MinIO/S3 operations
+// ObjectStorage.js - Main fs-compatible client for MinIO/S3 operations
 
 import { Client as MinioClient } from 'minio';
 import PathConverter from './PathConverter.js';
 import StreamConverter from './StreamConverter.js';
 import ErrorHandler from './ErrorHandler.js';
 
-class FsMinioClient {
+class ObjectStorage {
   /**
-   * Create FsMinioClient instance
+   * Create ObjectStorage instance
    * @param {Object} options - Configuration options
    * @param {string} options.endpoint - MinIO endpoint (e.g., 'localhost:9000')
    * @param {string} options.accessKey - Access key
@@ -477,4 +477,4 @@ class FsMinioClient {
   }
 }
 
-export default FsMinioClient;
+export default ObjectStorage;

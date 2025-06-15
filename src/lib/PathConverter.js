@@ -27,12 +27,21 @@ class PathConverter {
    */
   pathToMinIO(filePath) {
     // Normalize path and remove leading slash
-    const normalizedPath = path.posix.normalize(filePath).replace(/^\/+/, '');
+    let normalizedPath = path.posix.normalize(filePath).replace(/^\/+/, '');
+
+    // バケット名が先頭に含まれている場合は除去
+    if (normalizedPath.startsWith(this.bucket + '/')) {
+      normalizedPath = normalizedPath.substring(this.bucket.length + 1);
+    } else if (normalizedPath === this.bucket) {
+      normalizedPath = '';
+    }
     
     // Combine prefix and path
-    let key = normalizedPath;
+    let key;
     if (this.prefix) {
       key = this.prefix + this.separator + normalizedPath;
+    } else {
+      key = normalizedPath;
     }
     
     // Ensure we don't have double separators
@@ -51,19 +60,18 @@ class PathConverter {
    * @returns {string} Filesystem path
    */
   minIOToPath(bucket, key) {
-    let filePath = key;
-    
-    // Remove prefix if it exists
-    if (this.prefix && key.startsWith(this.prefix + this.separator)) {
-      filePath = key.substring(this.prefix.length + this.separator.length);
+    // bucketとkeyを結合して絶対パスを返す
+    let filePath = '';
+    if (bucket && key) {
+      filePath = '/' + bucket + '/' + key.replace(/^\/+/, '');
+    } else if (bucket) {
+      filePath = '/' + bucket;
+    } else if (key) {
+      filePath = '/' + key.replace(/^\/+/, '');
+    } else {
+      filePath = '/';
     }
-    
-    // Ensure leading slash for absolute path
-    if (!filePath.startsWith('/')) {
-      filePath = '/' + filePath;
-    }
-    
-    return path.posix.normalize(filePath);
+    return PathConverter.normalizePath(filePath);
   }
 
   /**
@@ -136,34 +144,83 @@ class PathConverter {
   }
 
   /**
-   * Join path segments
-   * @param {...string} segments - Path segments to join
-   * @returns {string} Joined path
+   * Split a path into bucket and key
+   * @param {string} filePath - Path like '/bucket/path/to/file.txt'
+   * @returns {{bucket: string, key: string}}
    */
-  joinPath(...segments) {
-    return path.posix.join(...segments);
+  static splitPath(filePath) {
+    const normalized = PathConverter.normalizePath(filePath);
+    if (normalized === '/') return { bucket: '', key: '' };
+    const parts = normalized.slice(1).split('/');
+    const bucket = parts.shift() || '';
+    const key = parts.join('/') || '';
+    return { bucket, key };
   }
 
   /**
-   * Check if path is absolute
-   * @param {string} filePath - Path to check
-   * @returns {boolean} True if absolute path
+   * Join bucket and key into a path
+   * @param {string} bucket
+   * @param {string} key
+   * @returns {string}
    */
-  isAbsolute(filePath) {
-    return path.posix.isAbsolute(filePath);
-  }
-
-  /**
-   * Resolve relative path to absolute
-   * @param {string} basePath - Base path
-   * @param {string} relativePath - Relative path
-   * @returns {string} Absolute path
-   */
-  resolve(basePath, relativePath) {
-    if (this.isAbsolute(relativePath)) {
-      return relativePath;
+  static joinPath(bucket, key) {
+    let pathStr = '';
+    if (bucket && key) {
+      pathStr = '/' + bucket + '/' + key.replace(/^\/+/, '');
+    } else if (bucket) {
+      pathStr = '/' + bucket;
+    } else if (key) {
+      pathStr = '/' + key.replace(/^\/+/, '');
+    } else {
+      pathStr = '/';
     }
-    return this.joinPath(basePath, relativePath);
+    // 正規化して余分なスラッシュを除去
+    return PathConverter.normalizePath(pathStr);
+  }
+
+  /**
+   * Normalize a path (remove duplicate slashes, ensure leading slash, remove trailing slash except root)
+   * @param {string} filePath
+   * @returns {string}
+   */
+  static normalizePath(filePath) {
+    if (!filePath) return '/';
+    let norm = path.posix.normalize(filePath).replace(/\/+/g, '/');
+    if (!norm.startsWith('/')) norm = '/' + norm;
+    if (norm.length > 1 && norm.endsWith('/')) norm = norm.slice(0, -1);
+    return norm;
+  }
+
+  /**
+   * Check if path is directory (trailing slash or root)
+   * @param {string} filePath
+   * @returns {boolean}
+   */
+  static isDirectory(filePath) {
+    const norm = PathConverter.normalizePath(filePath);
+    return norm === '/' || filePath.endsWith('/');
+  }
+
+  /**
+   * Get parent path (static)
+   * @param {string} filePath
+   * @returns {string}
+   */
+  static getParentPath(filePath) {
+    const norm = PathConverter.normalizePath(filePath);
+    const parent = path.posix.dirname(norm);
+    return parent === '.' ? '/' : parent;
+    }
+
+  /**
+   * Get basename (static)
+   * @param {string} filePath
+   * @returns {string}
+   */
+  static getBasename(filePath) {
+    const norm = PathConverter.normalizePath(filePath);
+    if (norm === '/') return '';
+    return path.posix.basename(norm);
   }
 
   /**
@@ -203,6 +260,14 @@ class PathConverter {
    */
   getPrefix() {
     return this.prefix;
+  }
+
+  // --- staticユーティリティをインスタンスからも呼べるようラップ ---
+  normalizePath(filePath) {
+    return PathConverter.normalizePath(filePath);
+  }
+  getBasename(filePath) {
+    return PathConverter.getBasename(filePath);
   }
 }
 
