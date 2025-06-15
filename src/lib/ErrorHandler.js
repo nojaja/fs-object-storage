@@ -92,20 +92,29 @@ class ErrorHandler {
    * @returns {Error} fs-compatible error
    */
   static createError(code, path = null, operation = 'open') {
-    const errorInfo = this.errorMapping[code] || this.errorMapping['Unknown'];
-    
+    // ENOENT, EACCES, EEXIST, EINVAL, ENAMETOOLONG など標準エラーコードにも対応
+    let errorInfo = this.errorMapping[code];
+    if (!errorInfo) {
+      // 標準的なfsエラーコードをサポート
+      switch (code) {
+        case 'ENOENT': errorInfo = { code: 'ENOENT', errno: -2, message: 'no such file or directory' }; break;
+        case 'EACCES': errorInfo = { code: 'EACCES', errno: -13, message: 'permission denied' }; break;
+        case 'EEXIST': errorInfo = { code: 'EEXIST', errno: -17, message: 'file already exists' }; break;
+        case 'EINVAL': errorInfo = { code: 'EINVAL', errno: -22, message: 'invalid argument' }; break;
+        case 'ENAMETOOLONG': errorInfo = { code: 'ENAMETOOLONG', errno: -36, message: 'file name too long' }; break;
+        default: errorInfo = this.errorMapping['Unknown'];
+      }
+    }
     const error = new Error();
     error.code = code;
     error.errno = errorInfo.errno;
     error.syscall = operation;
     error.path = path;
-    
     if (path) {
       error.message = `${code}: ${errorInfo.message}, ${operation} '${path}'`;
     } else {
       error.message = `${code}: ${errorInfo.message}`;
     }
-    
     return error;
   }
 
